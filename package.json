@@ -1,0 +1,12 @@
+{
+  "name": "stackmaestro",
+  "private": true,
+  "version": "0.1.0",
+  "description": "A stack-aware Cursor/VS Code extension + MCP server for GitHub PR stacks, including branches that haven't become PRs yet.",
+  "scripts": {
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck"
+  },
+  "engines": { "node": ">=20" },
+  "packageManager": "pnpm@12.21.0"
+}

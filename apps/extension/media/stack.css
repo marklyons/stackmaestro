@@ -1,0 +1,235 @@
+body {
+  font-family: var(--vscode-font-family);
+  color: var(--vscode-foreground);
+  padding: 4px 8px;
+}
+
+.trunk-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.6;
+  margin: 4px 0 10px;
+}
+
+.error {
+  color: var(--vscode-errorForeground);
+}
+
+.empty-state {
+  opacity: 0.7;
+  font-size: 12px;
+  line-height: 1.5;
+  padding: 8px 2px;
+}
+
+.chain-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.feature-header {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin: 2px 0 8px 2px;
+  font-size: 12px;
+}
+
+.feature-icon {
+  color: var(--vscode-focusBorder);
+  font-size: 10px;
+}
+
+.feature-name {
+  font-weight: 700;
+}
+
+.feature-progress {
+  margin-left: auto;
+  opacity: 0.6;
+  font-size: 11px;
+}
+
+.feature-pill {
+  border-radius: 10px;
+  padding: 0 6px;
+  border: 1px solid var(--vscode-focusBorder);
+  color: var(--vscode-focusBorder);
+}
+
+.chain {
+  display: flex;
+  flex-direction: column;
+}
+
+.chain-separator {
+  height: 1px;
+  background: var(--vscode-panel-border);
+  margin: 14px 0;
+}
+
+/* A stack is a flat line, tip at the top — not boxes nested inside boxes.
+   Each row is a connector dot/line in a gutter next to a full-width card. */
+.row {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  animation: row-in 180ms ease-out;
+}
+
+@keyframes row-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.gutter {
+  width: 14px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.gutter .dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--vscode-focusBorder);
+  flex-shrink: 0;
+  margin-top: 14px;
+  transition: background 200ms, box-shadow 200ms;
+}
+
+/* Planned but no work started yet — hollow outline. */
+.gutter .dot.dot-planned {
+  background: transparent;
+  border: 2px solid var(--vscode-panel-border);
+  width: 7px;
+  height: 7px;
+}
+
+/* Has commits, not yet claimed or published. */
+.gutter .dot.dot-inprogress {
+  background: var(--vscode-focusBorder);
+}
+
+/* Someone (an agent or you) is actively working this layer right now. */
+.gutter .dot.dot-active {
+  background: #10a37f;
+  box-shadow: 0 0 0 0 rgba(16, 163, 127, 0.5);
+  animation: dot-pulse 1.6s ease-out infinite;
+}
+
+@keyframes dot-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(16, 163, 127, 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 5px rgba(16, 163, 127, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(16, 163, 127, 0);
+  }
+}
+
+/* Published as a PR — done with this layer. */
+.gutter .dot.dot-published {
+  background: var(--vscode-badge-background);
+}
+
+.gutter .line {
+  width: 2px;
+  background: var(--vscode-panel-border);
+  flex: 1;
+}
+
+.node {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 6px;
+  padding: 6px 8px;
+  margin-bottom: 6px;
+}
+
+.node.in-worktree {
+  border-color: var(--vscode-focusBorder);
+}
+
+.node.claimed {
+  border-color: #10a37f;
+}
+
+.node-title {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.node-meta {
+  font-size: 11px;
+  opacity: 0.7;
+  margin-top: 2px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.pr-pill {
+  border-radius: 10px;
+  padding: 0 6px;
+  background: var(--vscode-badge-background);
+  color: var(--vscode-badge-foreground);
+}
+
+.worktree-pill {
+  border-radius: 10px;
+  padding: 0 6px;
+  border: 1px solid var(--vscode-focusBorder);
+}
+
+/* The "floating bubble" presence indicator for whoever has claimed a layer. */
+.bubble {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: #0B0B0F;
+  border: 2px solid var(--vscode-editor-background);
+  cursor: default;
+}
+
+.actions {
+  margin-top: 6px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.actions button {
+  font-size: 11px;
+  border: 1px solid var(--vscode-panel-border);
+  background: transparent;
+  color: var(--vscode-foreground);
+  border-radius: 4px;
+  padding: 2px 6px;
+  cursor: pointer;
+}
+
+.actions button:hover {
+  background: var(--vscode-list-hoverBackground);
+}

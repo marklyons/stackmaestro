@@ -1,0 +1,64 @@
+{
+  "name": "stackmaestro",
+  "displayName": "StackMaestro",
+  "description": "A stack-first view of your branches and PRs, including the ones that haven't become PRs yet. Works across git worktrees.",
+  "version": "0.1.0",
+  "private": true,
+  "publisher": "stackmaestro",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": ["SCM Providers", "Other"],
+  "activationEvents": [],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "views": {
+      "explorer": [
+        {
+          "type": "webview",
+          "id": "stackmaestro.stackView",
+          "name": "Stack"
+        }
+      ]
+    },
+    "commands": [
+      { "command": "stackmaestro.refreshStack", "title": "StackMaestro: Refresh Stack", "icon": "$(refresh)" },
+      { "command": "stackmaestro.createLayer", "title": "StackMaestro: New Layer on Top of a Branch" },
+      { "command": "stackmaestro.switchToLayer", "title": "StackMaestro: Switch to Layer" },
+      { "command": "stackmaestro.publishLayer", "title": "StackMaestro: Publish Layer as Draft PR" },
+      { "command": "stackmaestro.claimLayer", "title": "StackMaestro: Claim Layer" },
+      { "command": "stackmaestro.releaseLayer", "title": "StackMaestro: Release Layer" }
+    ],
+    "menus": {
+      "view/title": [
+        { "command": "stackmaestro.refreshStack", "when": "view == stackmaestro.stackView", "group": "navigation" }
+      ]
+    },
+    "configuration": {
+      "title": "StackMaestro",
+      "properties": {
+        "stackmaestro.agentName": {
+          "type": "string",
+          "default": "",
+          "description": "Name shown on your claims/bubbles. Defaults to your OS username."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "node esbuild.mjs",
+    "watch": "node esbuild.mjs --watch",
+    "typecheck": "tsc --noEmit",
+    "package": "node esbuild.mjs && vsce package --no-dependencies"
+  },
+  "dependencies": {
+    "@stackmaestro/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/vscode": "^1.90.0",
+    "@vscode/vsce": "^3.2.0",
+    "esbuild": "^0.24.0",
+    "typescript": "^5.6.0"
+  }
+}
