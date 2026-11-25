@@ -4,14 +4,6 @@ body {
   padding: 4px 8px;
 }
 
-.trunk-label {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  opacity: 0.6;
-  margin: 4px 0 10px;
-}
-
 .error {
   color: var(--vscode-errorForeground);
 }
@@ -90,29 +82,37 @@ body {
 }
 
 .gutter {
-  width: 14px;
+  width: 18px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
+/* The numbered circle doubles as the stack connector — lines run straight
+   into it on both sides, so the whole gutter reads as one continuous spine. */
 .gutter .dot {
-  width: 9px;
-  height: 9px;
+  box-sizing: border-box;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
   background: var(--vscode-focusBorder);
+  color: #fff;
   flex-shrink: 0;
-  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
   transition: background 200ms, box-shadow 200ms;
 }
 
 /* Planned but no work started yet — hollow outline. */
 .gutter .dot.dot-planned {
-  background: transparent;
+  background: var(--vscode-editor-background);
   border: 2px solid var(--vscode-panel-border);
-  width: 7px;
-  height: 7px;
+  color: var(--vscode-foreground);
 }
 
 /* Has commits, not yet claimed or published. */
@@ -142,6 +142,7 @@ body {
 /* Published as a PR — done with this layer. */
 .gutter .dot.dot-published {
   background: var(--vscode-badge-background);
+  color: var(--vscode-badge-foreground);
 }
 
 .gutter .line {
@@ -150,18 +151,14 @@ body {
   flex: 1;
 }
 
-/* The root marker: a small solid square instead of a dot, since trunk isn't
-   a layer you claim/publish — it's what the stack is built on. */
+/* The root marker: a small solid square instead of a numbered circle, since
+   trunk isn't a layer you claim/publish — it's what the stack is built on.
+   Same width as the line above it, so the spine runs straight into it. */
 .root-marker {
-  width: 8px;
-  height: 8px;
+  width: 2px;
+  height: 10px;
   flex-shrink: 0;
-  margin-top: 2px;
   background: var(--vscode-panel-border);
-}
-
-.trunk-row {
-  margin-top: -2px;
 }
 
 .trunk-anchor {
@@ -213,25 +210,6 @@ body {
 .node-title {
   font-weight: 600;
   font-size: 13px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-/* Numbered from the root (1, right on trunk) up to the tip. */
-.layer-badge {
-  flex-shrink: 0;
-  min-width: 16px;
-  height: 16px;
-  padding: 0 4px;
-  border-radius: 8px;
-  background: var(--vscode-badge-background);
-  color: var(--vscode-badge-foreground);
-  font-size: 10px;
-  font-weight: 700;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .node-meta {
@@ -256,7 +234,8 @@ body {
   border: 1px solid var(--vscode-focusBorder);
 }
 
-/* The "floating bubble" presence indicator for whoever has claimed a layer. */
+/* The "floating bubble" presence indicator for whoever has claimed a layer —
+   gently bobs in place so active work reads as alive, not just a static icon. */
 .bubble {
   position: absolute;
   top: -8px;
@@ -272,6 +251,17 @@ body {
   color: #0B0B0F;
   border: 2px solid var(--vscode-editor-background);
   cursor: default;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  animation: bubble-float 3s ease-in-out infinite;
+}
+
+@keyframes bubble-float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
 }
 
 .actions {

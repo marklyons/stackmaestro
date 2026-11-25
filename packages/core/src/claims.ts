@@ -1,5 +1,6 @@
 import { readState, updateState } from "./stateStore";
 import { flattenLayers } from "./stackInference";
+import { assignGreekName } from "./agentNames";
 import { ClaimConflictError, type Claim, type LayerNode } from "./types";
 
 const CLAIM_TTL_MINUTES = 90;
@@ -27,7 +28,11 @@ function isExpired(claim: Claim, now: number): boolean {
 export async function listActiveClaims(cwd: string): Promise<Claim[]> {
   const state = await readState(cwd);
   const now = Date.now();
-  return state.claims.filter((c) => !isExpired(c, now));
+  return state.claims
+    .filter((c) => !isExpired(c, now))
+    // A claim written before displayName existed (an older state.json) falls back to its raw
+    // agentName rather than rendering as "undefined" in the UI.
+    .map((c) => (c.displayName ? c : { ...c, displayName: c.agentName }));
 }
 
 /** Claims a layer for an agent — re-claiming by the same agent refreshes the heartbeat. */
@@ -44,10 +49,15 @@ export async function claimLayer(
     if (existing && existing.agentName !== agentName) {
       throw new ClaimConflictError(existing);
     }
+    // Re-claiming (same underlying caller, e.g. a heartbeat refresh) keeps its assigned name;
+    // a brand-new claim gets the next name no other currently-active claim is using.
+    const namesInUse = new Set(active.filter((c) => c.branch !== branch).map((c) => c.displayName));
+    const displayName = existing?.displayName ?? assignGreekName(namesInUse);
     const claim: Claim = {
       branch,
       agentName,
-      color: colorForAgent(agentName),
+      displayName,
+      color: colorForAgent(displayName),
       reason,
       claimedAt: existing?.claimedAt ?? now,
       heartbeatAt: now,

@@ -9,7 +9,10 @@ export interface PrInfo {
 
 export interface Claim {
   branch: string;
+  /** The raw identifier the caller passed in — used for conflict detection, not shown in the UI. */
   agentName: string;
+  /** A Greek-mythology name StackMaestro assigns to this claim, distinct from every other active claim. */
+  displayName: string;
   color: string;
   reason: string;
   claimedAt: string;

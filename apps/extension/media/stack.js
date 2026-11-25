@@ -33,11 +33,6 @@
   function render(forest) {
     root.innerHTML = "";
 
-    const hint = document.createElement("div");
-    hint.className = "trunk-label";
-    hint.textContent = "trunk is the root below · stack grows upward";
-    root.appendChild(hint);
-
     if (!forest.roots || forest.roots.length === 0) {
       const empty = document.createElement("div");
       empty.className = "empty-state";
@@ -97,11 +92,13 @@
       const gutter = document.createElement("div");
       gutter.className = "gutter";
       if (i > 0) gutter.appendChild(makeEl("div", "line line-up"));
-      gutter.appendChild(makeEl("div", "dot " + dotClass(node)));
+      const dot = makeEl("div", "dot " + dotClass(node));
+      dot.textContent = String(layerNumber);
+      gutter.appendChild(dot);
       gutter.appendChild(makeEl("div", "line line-down"));
       row.appendChild(gutter);
 
-      row.appendChild(renderCard(node, mainWorktreePath, !!feature, layerNumber));
+      row.appendChild(renderCard(node, mainWorktreePath, !!feature));
       chain.appendChild(row);
     });
 
@@ -137,17 +134,13 @@
     return "dot-planned";
   }
 
-  function renderCard(node, mainWorktreePath, featureShownInHeader, layerNumber) {
+  function renderCard(node, mainWorktreePath, featureShownInHeader) {
     const card = document.createElement("div");
     card.className = "node" + (node.worktreePath ? " in-worktree" : "") + (node.claim ? " claimed" : "");
 
     const titleEl = document.createElement("div");
     titleEl.className = "node-title";
-    const badge = document.createElement("span");
-    badge.className = "layer-badge";
-    badge.textContent = String(layerNumber);
-    titleEl.appendChild(badge);
-    titleEl.appendChild(textSpan(node.title ? `${node.branch} — ${node.title}` : node.branch));
+    titleEl.textContent = node.title ? `${node.branch} — ${node.title}` : node.branch;
     card.appendChild(titleEl);
 
     const meta = document.createElement("div");
@@ -181,8 +174,10 @@
       const bubble = document.createElement("div");
       bubble.className = "bubble";
       bubble.style.background = node.claim.color;
-      bubble.textContent = initials(node.claim.agentName);
-      bubble.title = `${node.claim.agentName}: ${node.claim.reason}`;
+      bubble.textContent = initials(node.claim.displayName);
+      bubble.title = `${node.claim.displayName}: ${node.claim.reason}`;
+      // Stagger the float so bubbles on different layers don't bob in lockstep.
+      bubble.style.animationDelay = `-${hashFloat(node.claim.displayName) * 3}s`;
       card.appendChild(bubble);
     }
 
@@ -228,6 +223,13 @@
 
   function initials(name) {
     return name.slice(0, 2).toUpperCase();
+  }
+
+  // Deterministic 0..1 value from a name, used only to desync animation timing.
+  function hashFloat(name) {
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
+    return (hash % 1000) / 1000;
   }
 
   function escapeHtml(value) {

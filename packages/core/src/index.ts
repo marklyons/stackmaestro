@@ -1,4 +1,5 @@
 export * from "./types";
+export * from "./agentNames";
 export * from "./exec";
 export * from "./worktrees";
 export * from "./stackInference";
