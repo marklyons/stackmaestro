@@ -150,6 +150,48 @@ body {
   flex: 1;
 }
 
+/* The root marker: a small solid square instead of a dot, since trunk isn't
+   a layer you claim/publish — it's what the stack is built on. */
+.root-marker {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  background: var(--vscode-panel-border);
+}
+
+.trunk-row {
+  margin-top: -2px;
+}
+
+.trunk-anchor {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding-bottom: 2px;
+}
+
+.trunk-ground {
+  display: block;
+  height: 3px;
+  width: 100%;
+  border-radius: 2px;
+  background: var(--vscode-panel-border);
+  margin-bottom: 4px;
+}
+
+.trunk-text {
+  font-size: 11px;
+  font-weight: 600;
+  opacity: 0.75;
+}
+
+.trunk-text em {
+  font-style: normal;
+  font-weight: 400;
+  opacity: 0.7;
+}
+
 .node {
   position: relative;
   flex: 1;
@@ -171,6 +213,25 @@ body {
 .node-title {
   font-weight: 600;
   font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Numbered from the root (1, right on trunk) up to the tip. */
+.layer-badge {
+  flex-shrink: 0;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: var(--vscode-badge-background);
+  color: var(--vscode-badge-foreground);
+  font-size: 10px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .node-meta {

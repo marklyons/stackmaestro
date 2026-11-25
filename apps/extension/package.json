@@ -9,7 +9,7 @@
     "vscode": "^1.90.0"
   },
   "categories": ["SCM Providers", "Other"],
-  "activationEvents": [],
+  "activationEvents": ["onStartupFinished"],
   "main": "./dist/extension.js",
   "contributes": {
     "views": {
@@ -17,7 +17,7 @@
         {
           "type": "webview",
           "id": "stackmaestro.stackView",
-          "name": "Stack"
+          "name": "StackMaestro"
         }
       ]
     },

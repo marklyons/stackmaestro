@@ -33,10 +33,10 @@
   function render(forest) {
     root.innerHTML = "";
 
-    const trunkLabel = document.createElement("div");
-    trunkLabel.className = "trunk-label";
-    trunkLabel.textContent = `on ${forest.trunk}`;
-    root.appendChild(trunkLabel);
+    const hint = document.createElement("div");
+    hint.className = "trunk-label";
+    hint.textContent = "trunk is the root below · stack grows upward";
+    root.appendChild(hint);
 
     if (!forest.roots || forest.roots.length === 0) {
       const empty = document.createElement("div");
@@ -53,8 +53,9 @@
         sep.className = "chain-separator";
         root.appendChild(sep);
       }
-      // Tip at the top of the screen, trunk at the bottom — a stack.
-      root.appendChild(renderChain([...chain].reverse(), forest.mainWorktreePath));
+      // Tip at the top of the screen, trunk at the bottom — a stack, numbered
+      // from the root (#1, right on top of trunk) up to the tip.
+      root.appendChild(renderChain([...chain].reverse(), forest.mainWorktreePath, forest.trunk));
     });
   }
 
@@ -66,7 +67,7 @@
     return nodesTipFirst.every((n) => n.feature === first) ? first : null;
   }
 
-  function renderChain(nodesTipFirst, mainWorktreePath) {
+  function renderChain(nodesTipFirst, mainWorktreePath, trunk) {
     const wrapper = document.createElement("div");
     wrapper.className = "chain-wrapper";
 
@@ -83,8 +84,13 @@
 
     const chain = document.createElement("div");
     chain.className = "chain";
+    const total = nodesTipFirst.length;
 
     nodesTipFirst.forEach((node, i) => {
+      // Numbered from the root (layer 1, sitting right on trunk) up to the tip —
+      // matches how you'd talk through a stack out loud: "layer 1, then 2, then 3...".
+      const layerNumber = total - i;
+
       const row = document.createElement("div");
       row.className = "row";
 
@@ -92,15 +98,36 @@
       gutter.className = "gutter";
       if (i > 0) gutter.appendChild(makeEl("div", "line line-up"));
       gutter.appendChild(makeEl("div", "dot " + dotClass(node)));
-      if (i < nodesTipFirst.length - 1) gutter.appendChild(makeEl("div", "line line-down"));
+      gutter.appendChild(makeEl("div", "line line-down"));
       row.appendChild(gutter);
 
-      row.appendChild(renderCard(node, mainWorktreePath, !!feature));
+      row.appendChild(renderCard(node, mainWorktreePath, !!feature, layerNumber));
       chain.appendChild(row);
     });
 
+    chain.appendChild(renderTrunkAnchor(trunk));
     wrapper.appendChild(chain);
     return wrapper;
+  }
+
+  // The solid foundation the whole stack sits on — not a layer itself, so it
+  // gets no number, just a distinct "ground line" look to anchor the stack.
+  function renderTrunkAnchor(trunk) {
+    const row = document.createElement("div");
+    row.className = "row trunk-row";
+
+    const gutter = document.createElement("div");
+    gutter.className = "gutter";
+    gutter.appendChild(makeEl("div", "line line-up"));
+    gutter.appendChild(makeEl("div", "root-marker"));
+    row.appendChild(gutter);
+
+    const anchor = document.createElement("div");
+    anchor.className = "trunk-anchor";
+    anchor.innerHTML = `<span class="trunk-ground"></span><span class="trunk-text">${escapeHtml(trunk)} <em>(root)</em></span>`;
+    row.appendChild(anchor);
+
+    return row;
   }
 
   function dotClass(node) {
@@ -110,13 +137,17 @@
     return "dot-planned";
   }
 
-  function renderCard(node, mainWorktreePath, featureShownInHeader) {
+  function renderCard(node, mainWorktreePath, featureShownInHeader, layerNumber) {
     const card = document.createElement("div");
     card.className = "node" + (node.worktreePath ? " in-worktree" : "") + (node.claim ? " claimed" : "");
 
     const titleEl = document.createElement("div");
     titleEl.className = "node-title";
-    titleEl.textContent = node.title ? `${node.branch} — ${node.title}` : node.branch;
+    const badge = document.createElement("span");
+    badge.className = "layer-badge";
+    badge.textContent = String(layerNumber);
+    titleEl.appendChild(badge);
+    titleEl.appendChild(textSpan(node.title ? `${node.branch} — ${node.title}` : node.branch));
     card.appendChild(titleEl);
 
     const meta = document.createElement("div");
