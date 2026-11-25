@@ -9,7 +9,7 @@ const LOCK_FILENAME = "state.lock";
 const LOCK_TIMEOUT_MS = 5000;
 const LOCK_RETRY_MS = 50;
 
-const EMPTY_STATE: StackState = { version: 1, claims: [], layerNotes: {} };
+const EMPTY_STATE: StackState = { version: 1, claims: [], layerNotes: {}, agents: {} };
 
 async function statePaths(cwd: string) {
   const dir = path.join(await gitCommonDir(cwd), STATE_DIRNAME);
@@ -37,7 +37,10 @@ async function acquireLock(lockPath: string): Promise<() => Promise<void>> {
 export async function readState(cwd: string): Promise<StackState> {
   const { file } = await statePaths(cwd);
   try {
-    return JSON.parse(await fs.readFile(file, "utf8"));
+    const parsed = JSON.parse(await fs.readFile(file, "utf8"));
+    // A state.json written before a field existed (agents, most recently) just won't have it —
+    // merge onto the empty shape rather than letting every reader guard against undefined.
+    return { ...structuredClone(EMPTY_STATE), ...parsed, agents: parsed.agents ?? {} };
   } catch (err) {
     if ((err as NodeJS.ErrnoException).code === "ENOENT") return structuredClone(EMPTY_STATE);
     throw err;

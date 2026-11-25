@@ -132,11 +132,11 @@ export function registerCommands(context: vscode.ExtensionContext, provider: Sta
       if (!reason) return;
 
       try {
-        await coreClaimLayer(cwd, branch, currentAgentName(), reason);
+        await coreClaimLayer(cwd, branch, { agentName: currentAgentName() }, reason);
       } catch (err) {
         if (err instanceof ClaimConflictError) {
           vscode.window.showWarningMessage(
-            `Already claimed by ${err.holder.agentName}: "${err.holder.reason}"`
+            `Already claimed by ${err.holder.displayName}: "${err.holder.reason}"`
           );
           return;
         }

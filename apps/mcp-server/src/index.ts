@@ -11,8 +11,11 @@ import {
   getFullStack,
   planFeature,
   publishLayer,
+  registerAgent,
   releaseClaim,
 } from "@stackmaestro/core";
+
+const LAB_ENUM = ["anthropic", "openai", "google", "meta", "xai", "mistral", "unknown"] as const;
 
 const server = new McpServer({ name: "stackmaestro", version: "0.1.0" });
 
@@ -46,24 +49,57 @@ server.registerTool(
 );
 
 server.registerTool(
+  "register_agent",
+  {
+    description:
+      "Registers your identity with StackMaestro — call this once, before you claim or work on any layer. This is " +
+      "the one piece of contract StackMaestro expects from every caller, no matter what's driving you (Claude, " +
+      "Codex, or anything else): say what you were asked to do, and — if another agent spawned you to work a " +
+      "specific layer — pass that agent's id as parentAgentId, so the stack view can show the chain of command " +
+      "(e.g. three sub-agents each shown as working under the agent that spawned them). Returns an agentId: pass " +
+      "it to every claim_layer call you make, and hand it to any sub-agent you spawn as ITS parentAgentId when " +
+      "that agent registers itself.",
+    inputSchema: {
+      repoPath: z.string(),
+      initialPrompt: z.string().describe("The task or instruction you were given, in your own words"),
+      lab: z
+        .enum(LAB_ENUM)
+        .optional()
+        .describe("Which lab's model is driving you, used for branding/color in the UI. Omit if unknown."),
+      parentAgentId: z.string().optional().describe("The agentId of whichever agent spawned you, if any"),
+    },
+  },
+  async ({ repoPath, initialPrompt, lab, parentAgentId }) => {
+    try {
+      return ok(await registerAgent(repoPath, { initialPrompt, lab, parentAgentId }));
+    } catch (err) {
+      return errorResult(err);
+    }
+  }
+);
+
+server.registerTool(
   "claim_layer",
   {
     description:
       "Claims a layer (branch) for an agent before working on it, so other agents on the same stack don't step " +
-      "on it. Fails if another agent already holds the claim. Re-claiming with the same agentName refreshes it.",
+      "on it. Fails if another agent already holds the claim. Re-claiming with the same agentName refreshes it. " +
+      "Pass agentId (from register_agent) to show up with your registered name, lab branding, and parent lineage " +
+      "— without it the claim still works but shows a generic, unbranded identity.",
     inputSchema: {
       repoPath: z.string(),
       branch: z.string(),
       agentName: z.string().describe("A stable name identifying the calling agent/session"),
+      agentId: z.string().optional().describe("The id returned by register_agent"),
       reason: z.string().describe("Why you're working on this layer, shown to other agents and the user"),
     },
   },
-  async ({ repoPath, branch, agentName, reason }) => {
+  async ({ repoPath, branch, agentName, agentId, reason }) => {
     try {
-      return ok(await claimLayer(repoPath, branch, agentName, reason));
+      return ok(await claimLayer(repoPath, branch, { agentName, agentId }, reason));
     } catch (err) {
       if (err instanceof ClaimConflictError) {
-        return errorResult(`Already claimed by ${err.holder.agentName}: "${err.holder.reason}"`);
+        return errorResult(`Already claimed by ${err.holder.displayName}: "${err.holder.reason}"`);
       }
       return errorResult(err);
     }

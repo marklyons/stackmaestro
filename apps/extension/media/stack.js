@@ -2,6 +2,17 @@
   const vscode = acquireVsCodeApi();
   const root = document.getElementById("root");
 
+  // Mirrors packages/core/src/labs.ts — display-only, kept here since this file isn't bundled.
+  const LAB_LABELS = {
+    anthropic: "Claude",
+    openai: "OpenAI",
+    google: "Gemini",
+    meta: "Llama",
+    xai: "Grok",
+    mistral: "Mistral",
+    unknown: "Agent",
+  };
+
   window.addEventListener("message", (event) => {
     const message = event.data;
     if (message.type === "error") {
@@ -151,9 +162,9 @@
       chip.textContent = node.feature;
       meta.appendChild(chip);
     }
-    meta.appendChild(
-      textSpan(`${node.commitCount} commit${node.commitCount === 1 ? "" : "s"} on ${node.parentBranch}`)
-    );
+    const commitText = textSpan(`${node.commitCount} commit${node.commitCount === 1 ? "" : "s"} on ${node.parentBranch}`);
+    commitText.className = "meta-text";
+    meta.appendChild(commitText);
     if (node.pr) {
       const pill = document.createElement("span");
       pill.className = "pr-pill";
@@ -168,6 +179,16 @@
       pill.textContent = node.worktreePath === mainWorktreePath ? "main worktree" : "checked out";
       meta.appendChild(pill);
     }
+    if (node.claim) {
+      // Visible in the layout, not just on hover — a recording can't show a hover state.
+      const pill = document.createElement("span");
+      pill.className = "agent-pill";
+      pill.style.borderColor = node.claim.color;
+      pill.textContent = node.claim.parentDisplayName
+        ? `${node.claim.displayName} · subagent of ${node.claim.parentDisplayName}`
+        : `${node.claim.displayName} · ${LAB_LABELS[node.claim.lab] || "Agent"}`;
+      meta.appendChild(pill);
+    }
     card.appendChild(meta);
 
     if (node.claim) {
@@ -175,9 +196,20 @@
       bubble.className = "bubble";
       bubble.style.background = node.claim.color;
       bubble.textContent = initials(node.claim.displayName);
-      bubble.title = `${node.claim.displayName}: ${node.claim.reason}`;
+      bubble.title = node.claim.parentDisplayName
+        ? `${node.claim.displayName} (subagent of ${node.claim.parentDisplayName}): ${node.claim.reason}`
+        : `${node.claim.displayName}: ${node.claim.reason}`;
       // Stagger the float so bubbles on different layers don't bob in lockstep.
       bubble.style.animationDelay = `-${hashFloat(node.claim.displayName) * 3}s`;
+
+      if (node.claim.parentDisplayName) {
+        const lineage = document.createElement("div");
+        lineage.className = "bubble-parent";
+        lineage.style.background = node.claim.parentColor || "#8B8B8B";
+        lineage.textContent = initials(node.claim.parentDisplayName);
+        bubble.appendChild(lineage);
+      }
+
       card.appendChild(bubble);
     }
 

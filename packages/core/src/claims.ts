@@ -3,6 +3,13 @@ import { flattenLayers } from "./stackInference";
 import { assignGreekName } from "./agentNames";
 import { ClaimConflictError, type Claim, type LayerNode } from "./types";
 
+export interface ClaimIdentity {
+  /** Raw identifier for conflict detection — can just mirror agentId when you have one. */
+  agentName: string;
+  /** From registerAgent — when given, the claim inherits its registered name, lab, and parent lineage. */
+  agentId?: string;
+}
+
 const CLAIM_TTL_MINUTES = 90;
 const AGENT_COLOR_PALETTE = [
   "#D97757",
@@ -30,38 +37,78 @@ export async function listActiveClaims(cwd: string): Promise<Claim[]> {
   const now = Date.now();
   return state.claims
     .filter((c) => !isExpired(c, now))
-    // A claim written before displayName existed (an older state.json) falls back to its raw
-    // agentName rather than rendering as "undefined" in the UI.
-    .map((c) => (c.displayName ? c : { ...c, displayName: c.agentName }));
+    // A claim written before this field existed (an older state.json) gets a harmless default
+    // instead of rendering as "undefined" in the UI.
+    .map((c) => ({
+      ...c,
+      displayName: c.displayName ?? c.agentName,
+      agentId: c.agentId ?? null,
+      lab: c.lab ?? "unknown",
+      parentAgentId: c.parentAgentId ?? null,
+      parentDisplayName: c.parentDisplayName ?? null,
+      parentColor: c.parentColor ?? null,
+    }));
 }
 
-/** Claims a layer for an agent — re-claiming by the same agent refreshes the heartbeat. */
+/** Claims a layer — re-claiming with the same agentName refreshes the heartbeat. Pass `agentId`
+ *  (from registerAgent) to get the agent's registered name, lab branding, and parent lineage;
+ *  without it, the claim still works but falls back to an ad-hoc name with no lab/lineage info. */
 export async function claimLayer(
   cwd: string,
   branch: string,
-  agentName: string,
+  identity: ClaimIdentity,
   reason: string
 ): Promise<Claim> {
   const now = new Date().toISOString();
   const state = await updateState(cwd, (state) => {
     const active = state.claims.filter((c) => !isExpired(c, Date.now()));
     const existing = active.find((c) => c.branch === branch);
-    if (existing && existing.agentName !== agentName) {
+    if (existing && existing.agentName !== identity.agentName) {
       throw new ClaimConflictError(existing);
     }
-    // Re-claiming (same underlying caller, e.g. a heartbeat refresh) keeps its assigned name;
-    // a brand-new claim gets the next name no other currently-active claim is using.
-    const namesInUse = new Set(active.filter((c) => c.branch !== branch).map((c) => c.displayName));
-    const displayName = existing?.displayName ?? assignGreekName(namesInUse);
-    const claim: Claim = {
-      branch,
-      agentName,
-      displayName,
-      color: colorForAgent(displayName),
-      reason,
-      claimedAt: existing?.claimedAt ?? now,
-      heartbeatAt: now,
-    };
+
+    let claim: Claim;
+    if (identity.agentId) {
+      const agent = state.agents[identity.agentId];
+      if (!agent) {
+        throw new Error(`No registered agent with id "${identity.agentId}" — call register_agent first.`);
+      }
+      const parent = agent.parentAgentId ? state.agents[agent.parentAgentId] : null;
+      claim = {
+        branch,
+        agentName: identity.agentName,
+        agentId: agent.id,
+        displayName: agent.displayName,
+        lab: agent.lab,
+        color: agent.color,
+        parentAgentId: agent.parentAgentId,
+        parentDisplayName: parent?.displayName ?? null,
+        parentColor: parent?.color ?? null,
+        reason,
+        claimedAt: existing?.claimedAt ?? now,
+        heartbeatAt: now,
+      };
+    } else {
+      // Re-claiming (same underlying caller, e.g. a heartbeat refresh) keeps its assigned name;
+      // a brand-new claim gets the next name no other currently-active claim is using.
+      const namesInUse = new Set(active.filter((c) => c.branch !== branch).map((c) => c.displayName));
+      const displayName = existing?.displayName ?? assignGreekName(namesInUse);
+      claim = {
+        branch,
+        agentName: identity.agentName,
+        agentId: null,
+        displayName,
+        lab: "unknown",
+        color: colorForAgent(displayName),
+        parentAgentId: null,
+        parentDisplayName: null,
+        parentColor: null,
+        reason,
+        claimedAt: existing?.claimedAt ?? now,
+        heartbeatAt: now,
+      };
+    }
+
     return { ...state, claims: [...active.filter((c) => c.branch !== branch), claim] };
   });
   return state.claims.find((c) => c.branch === branch)!;
