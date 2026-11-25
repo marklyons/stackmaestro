@@ -176,7 +176,7 @@
     if (node.worktreePath) {
       const pill = document.createElement("span");
       pill.className = "worktree-pill";
-      pill.textContent = node.worktreePath === mainWorktreePath ? "main worktree" : "checked out";
+      pill.textContent = node.worktreePath === mainWorktreePath ? "main worktree" : "own worktree";
       meta.appendChild(pill);
     }
     if (node.claim) {

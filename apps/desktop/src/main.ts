@@ -26,12 +26,18 @@ let watchedRepoPath: string | null = null;
 
 const POLL_INTERVAL_MS = 4000;
 const WATCH_DEBOUNCE_MS = 250;
+const ICON_PATH = path.join(__dirname, "..", "build", "icon-1024.png");
+
+if (process.platform === "darwin" && fs.existsSync(ICON_PATH)) {
+  app.dock?.setIcon(ICON_PATH);
+}
 
 function createWindow() {
   win = new BrowserWindow({
     width: 1400,
     height: 900,
     backgroundColor: "#1e1e1e",
+    icon: fs.existsSync(ICON_PATH) ? ICON_PATH : undefined,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
