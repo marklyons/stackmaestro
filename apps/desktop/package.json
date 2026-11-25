@@ -1,0 +1,20 @@
+{
+  "name": "@stackmaestro/desktop",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "node esbuild.mjs",
+    "start": "node esbuild.mjs && electron .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@stackmaestro/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "electron": "^33.2.0",
+    "esbuild": "^0.24.0",
+    "typescript": "^5.6.0"
+  }
+}

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self';" />
+  <title>StackMaestro</title>
+  <link rel="stylesheet" href="app.css" />
+</head>
+<body>
+  <div id="launcher" class="launcher">
+    <div class="launcher-card">
+      <div class="launcher-title">StackMaestro</div>
+      <div class="launcher-subtitle">A stack-first view of your branches and PRs.</div>
+      <button id="open-repo-btn" class="primary-btn">Open Repository…</button>
+      <div id="recent-list" class="recent-list"></div>
+    </div>
+  </div>
+
+  <div id="app" class="app" hidden>
+    <div class="topbar">
+      <button id="change-repo-btn" class="topbar-btn">&larr; Change Repository</button>
+      <div class="topbar-repo" id="topbar-repo"></div>
+      <div class="topbar-status" id="topbar-status"></div>
+    </div>
+    <div id="board" class="board"></div>
+  </div>
+
+  <div id="modal-overlay" class="modal-overlay" hidden>
+    <div class="modal">
+      <div class="modal-label" id="modal-label"></div>
+      <input id="modal-input" class="modal-input" type="text" />
+      <div class="modal-actions">
+        <button id="modal-cancel" class="modal-btn">Cancel</button>
+        <button id="modal-ok" class="modal-btn modal-btn-primary">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,485 @@
+:root {
+  --bg: #1e1e1e;
+  --fg: #d4d4d4;
+  --fg-dim: #9a9a9a;
+  --border: #3c3c3c;
+  --accent: #4285F4;
+  --card-bg: #252526;
+  --card-hover: #2a2d2e;
+  --badge-bg: #3c3c3c;
+  --badge-fg: #ffffff;
+  --success: #10a37f;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* .launcher/.app/.modal-overlay below all set an unconditional `display`, which otherwise
+   ties with the UA stylesheet's `[hidden]{display:none}` at equal specificity and can lose —
+   make hidden always win regardless of what else targets the element. */
+[hidden] {
+  display: none !important;
+}
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  overflow: hidden;
+}
+
+button {
+  font-family: inherit;
+}
+
+/* ---------- Launcher ---------- */
+
+.launcher {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.launcher-card {
+  text-align: center;
+  max-width: 420px;
+}
+
+.launcher-title {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.launcher-subtitle {
+  color: var(--fg-dim);
+  margin-bottom: 24px;
+}
+
+.primary-btn {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.primary-btn:hover {
+  filter: brightness(1.1);
+}
+
+.recent-list {
+  margin-top: 24px;
+  text-align: left;
+}
+
+.recent-item {
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--fg-dim);
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.recent-item:hover {
+  background: var(--card-hover);
+  color: var(--fg);
+}
+
+/* ---------- App shell ---------- */
+
+.app {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  -webkit-app-region: drag;
+}
+
+.topbar-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--fg);
+  border-radius: 6px;
+  padding: 4px 10px;
+  cursor: pointer;
+  font-size: 12px;
+  -webkit-app-region: no-drag;
+}
+
+.topbar-btn:hover {
+  background: var(--card-hover);
+}
+
+.topbar-repo {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.topbar-status {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--fg-dim);
+}
+
+.board {
+  flex: 1;
+  overflow-x: auto;
+  overflow-y: hidden;
+  display: flex;
+  align-items: flex-start;
+  gap: 32px;
+  padding: 24px;
+}
+
+.empty-state {
+  color: var(--fg-dim);
+  font-size: 14px;
+  padding: 40px;
+}
+
+.error {
+  color: #f14c4c;
+  padding: 24px;
+}
+
+/* ---------- One stack, as a column ---------- */
+
+.stack-column {
+  flex-shrink: 0;
+  width: 340px;
+  display: flex;
+  flex-direction: column;
+}
+
+.feature-header {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin: 2px 0 10px 2px;
+  font-size: 13px;
+}
+
+.feature-icon {
+  color: var(--accent);
+  font-size: 10px;
+}
+
+.feature-name {
+  font-weight: 700;
+}
+
+.feature-progress {
+  margin-left: auto;
+  color: var(--fg-dim);
+  font-size: 11px;
+}
+
+.feature-pill {
+  border-radius: 10px;
+  padding: 0 6px;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+}
+
+.chain {
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  animation: row-in 180ms ease-out;
+}
+
+@keyframes row-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.gutter {
+  width: 18px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.gutter .dot {
+  box-sizing: border-box;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  transition: background 200ms, box-shadow 200ms;
+}
+
+.gutter .dot.dot-planned {
+  background: var(--bg);
+  border: 2px solid var(--border);
+  color: var(--fg);
+}
+
+.gutter .dot.dot-inprogress {
+  background: var(--accent);
+}
+
+.gutter .dot.dot-active {
+  background: var(--success);
+  box-shadow: 0 0 0 0 rgba(16, 163, 127, 0.5);
+  animation: dot-pulse 1.6s ease-out infinite;
+}
+
+@keyframes dot-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(16, 163, 127, 0.5); }
+  70% { box-shadow: 0 0 0 5px rgba(16, 163, 127, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(16, 163, 127, 0); }
+}
+
+.gutter .dot.dot-published {
+  background: var(--badge-bg);
+  color: var(--badge-fg);
+}
+
+.gutter .line {
+  width: 2px;
+  background: var(--border);
+  flex: 1;
+}
+
+.root-marker {
+  width: 2px;
+  height: 10px;
+  flex-shrink: 0;
+  background: var(--border);
+}
+
+.trunk-anchor {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding-bottom: 2px;
+}
+
+.trunk-ground {
+  display: block;
+  height: 3px;
+  width: 100%;
+  border-radius: 2px;
+  background: var(--border);
+  margin-bottom: 4px;
+}
+
+.trunk-text {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--fg-dim);
+}
+
+.trunk-text em {
+  font-style: normal;
+  font-weight: 400;
+}
+
+.node {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+
+.node.in-worktree {
+  border-color: var(--accent);
+}
+
+.node.claimed {
+  border-color: var(--success);
+}
+
+.node-title {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.node-meta {
+  font-size: 11px;
+  margin-top: 4px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.meta-text {
+  color: var(--fg-dim);
+}
+
+.pr-pill {
+  border-radius: 10px;
+  padding: 0 6px;
+  background: var(--badge-bg);
+  color: var(--badge-fg);
+}
+
+.worktree-pill {
+  border-radius: 10px;
+  padding: 0 6px;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+}
+
+.agent-pill {
+  border-radius: 10px;
+  padding: 0 6px;
+  border: 1px solid var(--border);
+  font-weight: 600;
+}
+
+.bubble {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: #0B0B0F;
+  border: 2px solid var(--bg);
+  cursor: default;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  animation: bubble-float 3s ease-in-out infinite;
+}
+
+.bubble-parent {
+  position: absolute;
+  bottom: -4px;
+  left: -4px;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 6px;
+  font-weight: 700;
+  color: #0B0B0F;
+  border: 1.5px solid var(--bg);
+}
+
+@keyframes bubble-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+.actions {
+  margin-top: 8px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.actions button {
+  font-size: 11px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--fg);
+  border-radius: 5px;
+  padding: 3px 8px;
+  cursor: pointer;
+}
+
+.actions button:hover {
+  background: var(--card-hover);
+}
+
+/* ---------- Modal ---------- */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px;
+  width: 360px;
+}
+
+.modal-label {
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+
+.modal-input {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--fg);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.modal-btn {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--fg);
+  border-radius: 6px;
+  padding: 6px 14px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.modal-btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}

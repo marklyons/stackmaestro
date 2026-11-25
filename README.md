@@ -28,6 +28,11 @@ apps/extension     VS Code/Cursor sidebar (lives in the Explorer panel,
                    manual refresh needed.
 apps/mcp-server    Same core logic, exposed as MCP tools so Cursor's (or
                    Claude's) chat can drive the stack directly.
+apps/desktop       A standalone Electron app — pick any repo on disk and see
+                   all of its stacks at once, laid out as horizontally
+                   -scrollable columns (built for a wide window, where
+                   several independent stacks make more sense side by side
+                   than stacked vertically in a sidebar). No editor required.
 ```
 
 There's no hosted backend and no database. Coordination state
@@ -73,8 +78,44 @@ Before an agent (via the MCP server) or a person (via the extension) starts
 work on a layer, it claims it: a branch, an agent name, and a reason. A
 second claim on the same branch by a *different* agent is rejected with who
 already holds it. Claims auto-expire after 90 minutes of inactivity. The
-extension's stack view renders each active claim as a small colored circle
-("bubble") pinned to that layer's card, with the agent's initials.
+stack view renders each active claim as a small colored circle ("bubble")
+pinned to that layer's card, with the agent's initials — gently floating so
+active work reads as alive on screen, not just a static icon.
+
+## Agent identity: the one contract every caller follows
+
+StackMaestro doesn't care what's driving a claim — Claude, Codex, a human
+clicking a button in the extension, anything else. What it does care about
+is this one piece of contract: **register your identity before you claim or
+touch anything**, via the `register_agent` tool.
+
+```
+register_agent({ repoPath, initialPrompt, lab?, parentAgentId? })
+  → { id, displayName, lab, color, ... }
+```
+
+- `initialPrompt` — what you were asked to do, in your own words.
+- `lab` — which lab's model is driving you (`anthropic`, `openai`, `google`,
+  `meta`, `xai`, `mistral`), purely for branding/color in the UI. Omit if
+  you don't know.
+- `parentAgentId` — if another agent spawned you to work a specific layer,
+  its id. This is what makes hierarchy visible: tell Claude to kick off a
+  feature and it registers as, say, "Dionysus" with Anthropic's color; if
+  Dionysus then spawns three sub-agents to each take a layer, those
+  register with `parentAgentId` set to Dionysus's id, and every claim they
+  make shows a small lineage badge — "subagent of Dionysus" — right in the
+  stack view, not just in a tooltip.
+
+Registration returns an `agentId` — pass it to every `claim_layer` call you
+make (alongside a stable `agentName` used only for conflict detection), and
+hand it to any sub-agent you spawn as *its* `parentAgentId` when that agent
+registers itself. Skipping registration still works (`claim_layer` without
+an `agentId` falls back to an ad-hoc Greek name with no lab or lineage), but
+you lose the branding and the "who spawned whom" picture.
+
+Names are assigned from a Greek-mythology pool, guaranteed distinct from
+every other currently-active claim, and stable for that agent's whole
+session (re-claiming / heartbeat-refreshing keeps the same name).
 
 ## Using it from Cursor's (or Claude's) chat
 
@@ -92,9 +133,10 @@ project's `.cursor/mcp.json`); Claude Code: `claude mcp add`.
 }
 ```
 
-It exposes seven tools: `list_stack`, `plan_feature`, `claim_layer`,
-`release_layer`, `create_layer`, `ensure_worktree`, `publish_layer` — all
-take an explicit `repoPath` so one server instance can work across repos.
+It exposes eight tools: `list_stack`, `plan_feature`, `register_agent`,
+`claim_layer`, `release_layer`, `create_layer`, `ensure_worktree`,
+`publish_layer` — all take an explicit `repoPath` so one server instance
+can work across repos.
 
 `plan_feature` is the one to reach for when kicking off something new: tell
 the agent *"let's add task comments — split it into layers for the data
@@ -124,16 +166,36 @@ Then, in this folder in VS Code or Cursor: Run and Debug → "Run Extension"
 gets a new "Stack" section, under your file tree, showing the inferred
 stack.
 
+## Running the desktop app
+
+```bash
+pnpm install
+pnpm --filter @stackmaestro/desktop start   # builds, then launches Electron
+```
+
+Pick any git repo from the "Open Repository…" screen. It live-updates the
+same way the extension does (watching the shared git dir), and lays out
+every independent stack in that repo as its own horizontally-scrollable
+column — useful once you have more than one feature stacked at a time,
+which the sidebar's vertical layout doesn't show side by side as naturally.
+Claim/release/publish/switch all work the same as the extension; "New
+layer on top" and "Claim" use a small in-app text prompt instead of VS
+Code's command palette input.
+
 ## What's intentionally not here yet
 
-- **Publishing to the Marketplace.** This is set up to refine locally and
-  hand to colleagues (`pnpm --filter stackmaestro package` once there's an
-  icon/publisher worth shipping), not released yet, per the plan to demo
-  first and maybe open-source later.
+- **Publishing to the Marketplace**, or packaging/signing the desktop app
+  as an installer. Both are set up to refine locally and hand to colleagues
+  (`pnpm --filter stackmaestro package` for the extension, `pnpm --filter
+  @stackmaestro/desktop start` for the app) rather than released yet, per
+  the plan to demo first and maybe open-source later.
 - **A tree view for genuinely branching stacks** (one layer with two
-  children). The inference and data model already support it; the webview
-  renders children under a parent fine, but no UI yet for picking "which
-  sibling" when creating a layer vs. just naming the parent branch.
+  children). The inference and data model already support it; both UIs
+  render children under a parent fine, but no interface yet for picking
+  "which sibling" when creating a layer vs. just naming the parent branch.
+- **Agent records are never pruned.** Claims expire after 90 minutes, but
+  every agent ever registered stays in `state.json` forever — fine for a
+  single demo repo, not something to leave running indefinitely.
 - **Remote/team visibility.** Claims are local-machine-only by design (that's
   what makes them need no server) — they coordinate parallel agents on one
   machine's worktrees, not a distributed team. Not a target for this tool;
