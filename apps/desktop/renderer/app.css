@@ -362,10 +362,12 @@ button {
 /* The agent status pill — its own standalone element above the card's title, not squeezed
    into the meta-info row. Gently bobs in place so active work reads as alive on screen. */
 .agent-badge {
+  position: absolute;
+  top: -16px;
+  right: 10px;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 8px;
   padding: 4px 12px 4px 4px;
   border-radius: 999px;
   border: 1.5px solid var(--border);
