@@ -49,10 +49,12 @@ export function annotateWithPrs(roots: LayerNode[], prByBranch: Map<string, PrIn
 }
 
 /** Pushes a branch (if needed) and opens a draft PR against its stack parent. Safe to call again on an
- *  already-published layer — returns the existing PR instead of erroring on a duplicate. */
+ *  already-published layer — returns the existing OPEN PR instead of erroring on a duplicate. A PR
+ *  that was closed without merging doesn't count as "already published": a closed PR for a branch
+ *  doesn't block GitHub from accepting a new one, so this creates a fresh PR in that case too. */
 export async function publishLayer(cwd: string, node: LayerNode): Promise<PrInfo> {
   const existing = (await fetchPrsByBranch(cwd)).get(node.branch);
-  if (existing) return existing;
+  if (existing && existing.state === "OPEN") return existing;
 
   const createArgs = [
     "pr",

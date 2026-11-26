@@ -359,51 +359,52 @@ button {
   color: var(--accent);
 }
 
-.agent-pill {
-  border-radius: 10px;
-  padding: 0 6px;
-  border: 1px solid var(--border);
-  font-weight: 600;
-}
-
-.bubble {
-  position: absolute;
-  top: -8px;
-  right: -8px;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  display: flex;
+/* The agent status pill — its own standalone element above the card's title, not squeezed
+   into the meta-info row. Gently bobs in place so active work reads as alive on screen. */
+.agent-badge {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  font-size: 10px;
-  font-weight: 700;
-  color: #0B0B0F;
-  border: 2px solid var(--bg);
-  cursor: default;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
-  animation: bubble-float 3s ease-in-out infinite;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 4px 12px 4px 4px;
+  border-radius: 999px;
+  border: 1.5px solid var(--border);
+  background: var(--bg);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  animation: agent-badge-float 3s ease-in-out infinite;
 }
 
-.bubble-parent {
-  position: absolute;
-  bottom: -4px;
-  left: -4px;
-  width: 13px;
-  height: 13px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 6px;
-  font-weight: 700;
-  color: #0B0B0F;
-  border: 1.5px solid var(--bg);
-}
-
-@keyframes bubble-float {
+@keyframes agent-badge-float {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-3px); }
+  50% { transform: translateY(-2px); }
+}
+
+.agent-badge-icon {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  color: #fff;
+}
+
+.agent-badge-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+
+.agent-badge-name {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.agent-badge-status {
+  font-size: 11px;
+  color: var(--fg-dim);
 }
 
 .actions {

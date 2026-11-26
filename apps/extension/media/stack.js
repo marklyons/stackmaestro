@@ -3,14 +3,17 @@
   const root = document.getElementById("root");
 
   // Mirrors packages/core/src/labs.ts — display-only, kept here since this file isn't bundled.
-  const LAB_LABELS = {
-    anthropic: "Claude",
-    openai: "OpenAI",
-    google: "Gemini",
-    meta: "Llama",
-    xai: "Grok",
-    mistral: "Mistral",
-    unknown: "Agent",
+  // These glyphs are abstract stand-ins, not the real brand logos (no logo assets to embed, and
+  // reproducing trademarked artwork isn't something to do without rights) — just enough to tell
+  // labs apart at a glance by color + shape.
+  const LAB_ICONS = {
+    anthropic: { label: "Claude", glyph: "✻", color: "#D97757" },
+    openai: { label: "OpenAI", glyph: "◉", color: "#10A37F" },
+    google: { label: "Gemini", glyph: "◆", color: "#4285F4" },
+    meta: { label: "Meta", glyph: "∞", color: "#0668E1" },
+    xai: { label: "Grok", glyph: "✕", color: "#1D1D1F" },
+    mistral: { label: "Mistral", glyph: "▲", color: "#FA520F" },
+    unknown: { label: "Agent", glyph: "●", color: "#8B8B8B" },
   };
 
   window.addEventListener("message", (event) => {
@@ -145,9 +148,44 @@
     return "dot-planned";
   }
 
+  // The agent status pill: a lab-colored icon, the agent's full name, and a status subline —
+  // standalone, sitting above the card's own content, not squeezed into the meta-info row.
+  function renderAgentBadge(claim) {
+    const lab = LAB_ICONS[claim.lab] || LAB_ICONS.unknown;
+
+    const badge = document.createElement("div");
+    badge.className = "agent-badge";
+    badge.style.borderColor = claim.color;
+    badge.title = `${claim.displayName} (${lab.label}): ${claim.reason}`;
+    badge.style.animationDelay = `-${hashFloat(claim.displayName) * 3}s`;
+
+    const icon = document.createElement("span");
+    icon.className = "agent-badge-icon";
+    icon.style.background = claim.color;
+    icon.textContent = lab.glyph;
+    badge.appendChild(icon);
+
+    const text = document.createElement("span");
+    text.className = "agent-badge-text";
+    const nameEl = document.createElement("span");
+    nameEl.className = "agent-badge-name";
+    nameEl.textContent = claim.displayName;
+    const statusEl = document.createElement("span");
+    statusEl.className = "agent-badge-status";
+    statusEl.textContent = claim.parentDisplayName ? `subagent of ${claim.parentDisplayName}` : "Coding";
+    text.append(nameEl, statusEl);
+    badge.appendChild(text);
+
+    return badge;
+  }
+
   function renderCard(node, mainWorktreePath, featureShownInHeader) {
     const card = document.createElement("div");
     card.className = "node" + (node.worktreePath ? " in-worktree" : "") + (node.claim ? " claimed" : "");
+
+    if (node.claim) {
+      card.appendChild(renderAgentBadge(node.claim));
+    }
 
     const titleEl = document.createElement("div");
     titleEl.className = "node-title";
@@ -181,44 +219,12 @@
       pill.title = node.worktreePath;
       meta.appendChild(pill);
     }
-    if (node.claim) {
-      // Visible in the layout, not just on hover — a recording can't show a hover state.
-      const pill = document.createElement("span");
-      pill.className = "agent-pill";
-      pill.style.borderColor = node.claim.color;
-      pill.textContent = node.claim.parentDisplayName
-        ? `${node.claim.displayName} · subagent of ${node.claim.parentDisplayName}`
-        : `${node.claim.displayName} · ${LAB_LABELS[node.claim.lab] || "Agent"}`;
-      meta.appendChild(pill);
-    }
     card.appendChild(meta);
-
-    if (node.claim) {
-      const bubble = document.createElement("div");
-      bubble.className = "bubble";
-      bubble.style.background = node.claim.color;
-      bubble.textContent = initials(node.claim.displayName);
-      bubble.title = node.claim.parentDisplayName
-        ? `${node.claim.displayName} (subagent of ${node.claim.parentDisplayName}): ${node.claim.reason}`
-        : `${node.claim.displayName}: ${node.claim.reason}`;
-      // Stagger the float so bubbles on different layers don't bob in lockstep.
-      bubble.style.animationDelay = `-${hashFloat(node.claim.displayName) * 3}s`;
-
-      if (node.claim.parentDisplayName) {
-        const lineage = document.createElement("div");
-        lineage.className = "bubble-parent";
-        lineage.style.background = node.claim.parentColor || "#8B8B8B";
-        lineage.textContent = initials(node.claim.parentDisplayName);
-        bubble.appendChild(lineage);
-      }
-
-      card.appendChild(bubble);
-    }
 
     const actions = document.createElement("div");
     actions.className = "actions";
     actions.appendChild(button("Switch to", () => vscode.postMessage({ type: "switchToLayer", branch: node.branch })));
-    if (!node.pr) {
+    if (!node.pr || node.pr.state !== "OPEN") {
       actions.appendChild(
         button("Publish as PR", () => vscode.postMessage({ type: "publishLayer", branch: node.branch }))
       );
@@ -245,10 +251,6 @@
     const span = document.createElement("span");
     span.textContent = text;
     return span;
-  }
-
-  function initials(name) {
-    return name.slice(0, 2).toUpperCase();
   }
 
   function basename(filePath) {
