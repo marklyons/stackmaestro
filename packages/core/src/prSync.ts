@@ -1,5 +1,5 @@
 import { runGh, runGit } from "./exec";
-import { flattenLayers } from "./stackInference";
+import { buildStackForest, flattenLayers, toChains } from "./stackInference";
 import type { LayerNode, PrInfo } from "./types";
 
 interface GhPr {
@@ -84,5 +84,77 @@ export async function publishLayer(cwd: string, node: LayerNode): Promise<PrInfo
   const prs = await fetchPrsByBranch(cwd);
   const pr = prs.get(node.branch);
   if (!pr) throw new Error(`Created the PR but couldn't read it back for ${node.branch}.`);
+
+  // Best-effort: register/extend this with GitHub's native stacks feature, so the PR actually
+  // shows up linked as a stack on github.com instead of just happening to chain by base branch.
+  await syncGitHubStack(cwd).catch(() => undefined);
+
   return pr;
+}
+
+interface GhStack {
+  number: number;
+  pull_requests: { number: number }[];
+}
+
+export interface GitHubStackSyncResult {
+  created: number[][];
+  extended: { stackNumber: number; added: number[] }[];
+  skipped: string[];
+}
+
+/**
+ * Registers every maximal run of consecutively-published layers (from the trunk end) as a real
+ * GitHub stack via its REST API, so a PR shows up linked to its neighbors on github.com instead of
+ * requiring someone to click "Preview stack" by hand. Safe to call repeatedly — already-covered
+ * runs are left alone, and a run that extends an existing stack is added onto it rather than
+ * recreated. Never throws: a sync failure shouldn't block the publish that triggered it.
+ */
+export async function syncGitHubStack(cwd: string): Promise<GitHubStackSyncResult> {
+  const result: GitHubStackSyncResult = { created: [], extended: [], skipped: [] };
+
+  const nameWithOwner = await runGh(["repo", "view", "--json", "nameWithOwner", "-q", ".nameWithOwner"], cwd);
+  const forest = await buildStackForest(cwd);
+  const prByBranch = await fetchPrsByBranch(cwd);
+  annotateWithPrs(forest.roots, prByBranch);
+
+  const existingStacks: GhStack[] = JSON.parse(await runGh(["api", `repos/${nameWithOwner}/stacks`], cwd));
+  const stackedPrNumbers = new Set(existingStacks.flatMap((s) => s.pull_requests.map((p) => p.number)));
+
+  for (const chain of toChains(forest.roots)) {
+    const published: number[] = [];
+    for (const node of chain) {
+      if (!node.pr) break; // stop at the first not-yet-published layer
+      published.push(node.pr.number);
+    }
+    if (published.length < 2) continue; // nothing to link yet
+
+    if (published.every((n) => stackedPrNumbers.has(n))) continue; // already fully covered
+
+    if (!published.some((n) => stackedPrNumbers.has(n))) {
+      await runGh(
+        ["api", "-X", "POST", `repos/${nameWithOwner}/stacks`, ...published.flatMap((n) => ["-F", `pull_requests[]=${n}`])],
+        cwd
+      );
+      result.created.push(published);
+      continue;
+    }
+
+    // Partially covered: extend whichever existing stack already holds the covered prefix with
+    // just the new PRs on top of it.
+    const covered = published.filter((n) => stackedPrNumbers.has(n));
+    const added = published.filter((n) => !stackedPrNumbers.has(n));
+    const hostStack = existingStacks.find((s) => covered.every((n) => s.pull_requests.some((p) => p.number === n)));
+    if (!hostStack) {
+      result.skipped.push(`PRs ${published.join(", ")}: covered by more than one existing stack, not extending`);
+      continue;
+    }
+    await runGh(
+      ["api", "-X", "POST", `repos/${nameWithOwner}/stacks/${hostStack.number}/add`, ...added.flatMap((n) => ["-F", `pull_requests[]=${n}`])],
+      cwd
+    );
+    result.extended.push({ stackNumber: hostStack.number, added });
+  }
+
+  return result;
 }

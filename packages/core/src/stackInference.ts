@@ -125,3 +125,19 @@ export function findLayer(roots: LayerNode[], branch: string): LayerNode | null 
 export function flattenLayers(roots: LayerNode[]): LayerNode[] {
   return roots.flatMap((node) => [node, ...flattenLayers(node.children)]);
 }
+
+/** Every root-to-leaf path through the forest, trunk-most node first — the order GitHub's stack
+ *  API wants (bottom to top), and the same shape the webview renders (tip-first there, reversed). */
+export function toChains(roots: LayerNode[]): LayerNode[][] {
+  const chains: LayerNode[][] = [];
+  function walk(node: LayerNode, soFar: LayerNode[]) {
+    const chain = [...soFar, node];
+    if (node.children.length === 0) {
+      chains.push(chain);
+      return;
+    }
+    for (const child of node.children) walk(child, chain);
+  }
+  for (const root of roots) walk(root, []);
+  return chains;
+}

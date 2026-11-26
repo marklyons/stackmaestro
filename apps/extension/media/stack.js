@@ -176,7 +176,9 @@
     if (node.worktreePath) {
       const pill = document.createElement("span");
       pill.className = "worktree-pill";
-      pill.textContent = node.worktreePath === mainWorktreePath ? "main worktree" : "own worktree";
+      pill.textContent =
+        node.worktreePath === mainWorktreePath ? "main worktree" : basename(node.worktreePath);
+      pill.title = node.worktreePath;
       meta.appendChild(pill);
     }
     if (node.claim) {
@@ -226,9 +228,6 @@
     } else {
       actions.appendChild(button("Claim", () => vscode.postMessage({ type: "claimLayer", branch: node.branch })));
     }
-    actions.appendChild(
-      button("New layer on top", () => vscode.postMessage({ type: "createLayer", branch: node.branch }))
-    );
     card.appendChild(actions);
 
     return card;
@@ -255,6 +254,10 @@
 
   function initials(name) {
     return name.slice(0, 2).toUpperCase();
+  }
+
+  function basename(filePath) {
+    return filePath.split("/").filter(Boolean).pop() || filePath;
   }
 
   // Deterministic 0..1 value from a name, used only to desync animation timing.

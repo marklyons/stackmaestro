@@ -13,6 +13,7 @@ import {
   publishLayer,
   registerAgent,
   releaseClaim,
+  syncGitHubStack,
 } from "@stackmaestro/core";
 
 const LAB_ENUM = ["anthropic", "openai", "google", "meta", "xai", "mistral", "unknown"] as const;
@@ -208,7 +209,12 @@ server.registerTool(
 server.registerTool(
   "publish_layer",
   {
-    description: "Pushes a layer's branch and opens a draft GitHub PR against its inferred stack parent.",
+    description:
+      "Pushes a layer's branch and opens a draft GitHub PR against its inferred stack parent. Also registers (or " +
+      "extends) the PR as a real GitHub stack — using GitHub's native stacked-PRs feature — so it shows up linked " +
+      "to its neighbors on github.com instead of needing someone to click \"Preview stack\" by hand. That sync is " +
+      "best-effort and order-independent: publish layers in any order (including from several agents in " +
+      "parallel) and the stack still ends up correctly linked once they're all published.",
     inputSchema: { repoPath: z.string(), branch: z.string() },
   },
   async ({ repoPath, branch }) => {
@@ -217,6 +223,25 @@ server.registerTool(
       const node = findLayer(forest.roots, branch);
       if (!node) return errorResult(`No layer named "${branch}" found.`);
       return ok(await publishLayer(repoPath, node));
+    } catch (err) {
+      return errorResult(err);
+    }
+  }
+);
+
+server.registerTool(
+  "sync_github_stack",
+  {
+    description:
+      "Registers every maximal run of consecutively-published layers as a real GitHub stack via its REST API " +
+      "(github.com's native stacked-PRs feature, not just base-branch chaining). publish_layer already calls this " +
+      "automatically, so you shouldn't normally need it — use it to fix up a repo whose PRs were published before " +
+      "this existed, or after publishing PRs some other way.",
+    inputSchema: { repoPath: z.string() },
+  },
+  async ({ repoPath }) => {
+    try {
+      return ok(await syncGitHubStack(repoPath));
     } catch (err) {
       return errorResult(err);
     }

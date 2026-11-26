@@ -269,7 +269,9 @@
     if (node.worktreePath) {
       const pill = document.createElement("span");
       pill.className = "worktree-pill";
-      pill.textContent = node.worktreePath === mainWorktreePath ? "main worktree" : "own worktree";
+      pill.textContent =
+        node.worktreePath === mainWorktreePath ? "main worktree" : basename(node.worktreePath);
+      pill.title = node.worktreePath;
       meta.appendChild(pill);
     }
     if (node.claim) {
@@ -341,16 +343,6 @@
       );
     }
 
-    actions.appendChild(
-      button("New layer on top", async () => {
-        const branchName = await ask("New branch name");
-        if (!branchName) return;
-        const title = await ask("What is this layer? (optional)");
-        const result = await window.stackmaestro.createLayer(currentRepoPath, node.branch, branchName, title || undefined);
-        if (!result.ok) alert(result.error);
-      })
-    );
-
     card.appendChild(actions);
     return card;
   }
@@ -376,6 +368,10 @@
 
   function initials(name) {
     return name.slice(0, 2).toUpperCase();
+  }
+
+  function basename(filePath) {
+    return filePath.split("/").filter(Boolean).pop() || filePath;
   }
 
   function hashFloat(name) {
