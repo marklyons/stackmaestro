@@ -223,11 +223,6 @@
         button("Publish as PR", () => vscode.postMessage({ type: "publishLayer", branch: node.branch }))
       );
     }
-    if (node.claim) {
-      actions.appendChild(button("Release", () => vscode.postMessage({ type: "releaseLayer", branch: node.branch })));
-    } else {
-      actions.appendChild(button("Claim", () => vscode.postMessage({ type: "claimLayer", branch: node.branch })));
-    }
     card.appendChild(actions);
 
     return card;

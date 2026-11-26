@@ -325,24 +325,6 @@
       );
     }
 
-    if (node.claim) {
-      actions.appendChild(
-        button("Release", async () => {
-          await window.stackmaestro.releaseLayer(currentRepoPath, node.branch, node.claim.agentName);
-        })
-      );
-    } else {
-      actions.appendChild(
-        button("Claim", async () => {
-          const reason = await ask(`Why are you claiming "${node.branch}"?`);
-          if (!reason) return;
-          const agentName = `desktop-${Math.random().toString(36).slice(2, 8)}`;
-          const result = await window.stackmaestro.claimLayer(currentRepoPath, node.branch, agentName, reason);
-          if (!result.ok) alert(result.error);
-        })
-      );
-    }
-
     card.appendChild(actions);
     return card;
   }
