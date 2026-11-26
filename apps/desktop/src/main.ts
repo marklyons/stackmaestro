@@ -125,7 +125,10 @@ ipcMain.handle("switchToLayer", async (_event, repoPath: string, branch: string)
   try {
     const current = await tryRunGit(["branch", "--show-current"], repoPath);
     if (current === branch) return { ok: true, alreadyOn: true };
-    await runGit(["checkout", branch], repoPath);
+    // `switch` + `--`, not `checkout`: checkout's `-- <path>` means "restore this file from
+    // HEAD" (a different command), and `--` still stops a branch name like "-f" from being
+    // read as switch's own force flag.
+    await runGit(["switch", "--", branch], repoPath);
     if (watchedRepoPath === repoPath) await pushStackUpdate(repoPath);
     return { ok: true, alreadyOn: false };
   } catch (err) {

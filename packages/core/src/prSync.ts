@@ -79,7 +79,10 @@ export async function publishLayer(cwd: string, node: LayerNode): Promise<PrInfo
       const pr = (await fetchPrsByBranch(cwd)).get(node.branch);
       if (pr) return pr;
     }
-    await runGit(["push", "-u", "origin", node.branch], cwd);
+    // `--` is defense-in-depth here: node.branch is a real existing ref by this point (found via
+    // findLayer against actual git branches), not raw caller text, but every other git call in
+    // this codebase shields its positional branch arg the same way, so this one does too.
+    await runGit(["push", "-u", "origin", "--", node.branch], cwd);
     await runGh(createArgs, cwd);
   }
 

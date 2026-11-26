@@ -55,14 +55,19 @@ export function registerCommands(context: vscode.ExtensionContext, provider: Sta
         return;
       }
 
-      // A plain checkout in the current working directory — same window,
+      // A plain switch in the current working directory — same window,
       // same worktree. No new window, no worktree created on your behalf.
       // Parallel worktrees are an explicit, separate thing (see
       // ensure_worktree in the MCP server) for when agents genuinely need to
       // work two layers at once; a human clicking "Switch to" just wants to
       // move up or down the stack in place.
+      // `git switch` (not `checkout`) plus `--`: checkout's `-- <path>` means
+      // "restore this file from HEAD", a different command entirely, so `--`
+      // there wouldn't even mean "stop reading flags" the way we need; switch
+      // has no such dual meaning, and `--` still stops a branch name like
+      // "-f" from being read as checkout/switch's own force flag.
       try {
-        await runGit(["checkout", branch], cwd);
+        await runGit(["switch", "--", branch], cwd);
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         if (/already (used|checked out)/.test(message)) {

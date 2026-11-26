@@ -54,6 +54,7 @@ export async function ensureWorktree(cwd: string, branch: string): Promise<strin
   if (!main) throw new Error("Could not find the main worktree.");
 
   const target = worktreePathFor(main.path, branch);
-  await runGit(["worktree", "add", target, branch], cwd);
+  // `--` stops a caller-supplied branch name like "--detach" from being read as a flag.
+  await runGit(["worktree", "add", target, "--", branch], cwd);
   return target;
 }

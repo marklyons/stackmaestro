@@ -12,7 +12,11 @@ export async function createLayer(
   branchName: string,
   title?: string
 ): Promise<void> {
-  await runGit(["branch", branchName, parentBranch], cwd);
+  // `--` stops git from treating a caller-supplied name as a flag — a branch named e.g. "-D"
+  // without it would make this `git branch -D <parentBranch>`, deleting parentBranch instead of
+  // creating anything. Both args are caller-controlled (parentBranch defaults to trunk, but
+  // create_layer lets a caller name any branch), so both need to be shielded.
+  await runGit(["branch", "--", branchName, parentBranch], cwd);
   await updateState(cwd, (state) => ({
     ...state,
     layerNotes: {
@@ -61,7 +65,7 @@ export async function planFeature(
       previousBranch = layer.branch;
       continue;
     }
-    await runGit(["branch", layer.branch, parentBranch], cwd);
+    await runGit(["branch", "--", layer.branch, parentBranch], cwd);
     created.push({ branch: layer.branch, parentBranch, title: layer.title });
     previousBranch = layer.branch;
   }
