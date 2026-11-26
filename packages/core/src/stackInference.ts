@@ -67,10 +67,19 @@ export async function buildStackForest(cwd: string): Promise<StackForest> {
   for (const branch of branches) {
     // A parent declared at creation time (createLayer/planFeature) is authoritative — ancestry
     // inference alone can't order two sibling-looking branches before either has real commits.
-    // Only trust it if it still resolves to a real branch that's still a real ancestor, so a
-    // branch that was later rebased elsewhere by hand still falls back to honest inference.
+    // Trust it as long as the two branches haven't genuinely diverged — checked in BOTH
+    // directions, not just "is the declared parent an ancestor of this branch". A layer that
+    // hasn't been committed to yet while an earlier sibling in the same plan has (e.g. only the
+    // bottom-most layer has real commits so far) is still an ancestor of ITS declared parent, not
+    // the other way around — requiring the single direction broke that exact case, collapsing
+    // every not-yet-started layer above the first one back onto trunk. Only a branch that was
+    // later rebased somewhere unrelated by hand fails both checks and falls back to inference.
     const declared = state?.layerNotes[branch.name]?.parentBranch;
-    if (declared && branchNameSet.has(declared) && (await isAncestor(cwd, declared, branch.name))) {
+    if (
+      declared &&
+      branchNameSet.has(declared) &&
+      ((await isAncestor(cwd, declared, branch.name)) || (await isAncestor(cwd, branch.name, declared)))
+    ) {
       parentOf.set(branch.name, declared);
       continue;
     }
