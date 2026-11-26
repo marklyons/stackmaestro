@@ -363,7 +363,7 @@ button {
    into the meta-info row. Gently bobs in place so active work reads as alive on screen. */
 .agent-badge {
   position: absolute;
-  top: -16px;
+  bottom: -16px;
   right: 10px;
   display: inline-flex;
   align-items: center;
