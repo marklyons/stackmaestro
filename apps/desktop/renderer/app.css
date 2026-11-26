@@ -140,14 +140,18 @@ button {
   color: var(--fg-dim);
 }
 
+/* Outer: fills the window, scrolls as one unit so the row-of-stacks and the shared
+   trunk bar beneath them always move together. */
 .board {
   flex: 1;
-  overflow-x: auto;
-  overflow-y: auto;
-  display: flex;
-  align-items: flex-start;
-  gap: 32px;
+  overflow: auto;
   padding: 24px;
+}
+
+.board-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 32px;
 }
 
 .empty-state {
@@ -275,18 +279,18 @@ button {
   flex: 1;
 }
 
-.root-marker {
-  width: 2px;
-  height: 10px;
-  flex-shrink: 0;
-  background: var(--border);
+/* A short connector stub under each column's last layer, running down to the one
+   shared trunk bar below the whole row — reuses .gutter's own look (same width,
+   same line style) so it reads as a continuation of that column's own spine. */
+.column-stub {
+  height: 20px;
 }
 
-.trunk-anchor {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  padding-bottom: 2px;
+/* One shared "ground" the entire row of stacks sits on — not per-column, so two
+   independent feature stacks both visibly resting on the same trunk read as exactly
+   that, instead of implying two different trunks. */
+.shared-trunk {
+  margin-top: 4px;
 }
 
 .trunk-ground {
@@ -295,7 +299,7 @@ button {
   width: 100%;
   border-radius: 2px;
   background: var(--border);
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 
 .trunk-text {

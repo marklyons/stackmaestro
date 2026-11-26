@@ -64,8 +64,13 @@
       }
       // Tip at the top of the screen, trunk at the bottom — a stack, numbered
       // from the root (#1, right on top of trunk) up to the tip.
-      root.appendChild(renderChain([...chain].reverse(), forest.mainWorktreePath, forest.trunk));
+      root.appendChild(renderChain([...chain].reverse(), forest.mainWorktreePath));
     });
+
+    // One shared trunk anchor for every chain above, not one per chain — independent
+    // feature stacks really do all sit on the same trunk, and repeating "main (root)"
+    // per chain read as if each had a different one.
+    root.appendChild(renderSharedTrunk(forest.trunk, chains.length > 1));
   }
 
   // If every layer in a chain belongs to the same named feature plan, show one
@@ -76,7 +81,7 @@
     return nodesTipFirst.every((n) => n.feature === first) ? first : null;
   }
 
-  function renderChain(nodesTipFirst, mainWorktreePath, trunk) {
+  function renderChain(nodesTipFirst, mainWorktreePath) {
     const wrapper = document.createElement("div");
     wrapper.className = "chain-wrapper";
 
@@ -116,26 +121,25 @@
       chain.appendChild(row);
     });
 
-    chain.appendChild(renderTrunkAnchor(trunk));
     wrapper.appendChild(chain);
     return wrapper;
   }
 
-  // The solid foundation the whole stack sits on — not a layer itself, so it
-  // gets no number, just a distinct "ground line" look to anchor the stack.
-  function renderTrunkAnchor(trunk) {
+  // The solid foundation every chain above sits on — one shared anchor, not a layer
+  // itself, so it gets no number, just a distinct "ground line" look.
+  function renderSharedTrunk(trunk, multipleStacks) {
     const row = document.createElement("div");
     row.className = "row trunk-row";
 
     const gutter = document.createElement("div");
     gutter.className = "gutter";
-    gutter.appendChild(makeEl("div", "line line-up"));
     gutter.appendChild(makeEl("div", "root-marker"));
     row.appendChild(gutter);
 
     const anchor = document.createElement("div");
     anchor.className = "trunk-anchor";
-    anchor.innerHTML = `<span class="trunk-ground"></span><span class="trunk-text">${escapeHtml(trunk)} <em>(root)</em></span>`;
+    const note = multipleStacks ? " <em>(root — every stack above shares this trunk)</em>" : " <em>(root)</em>";
+    anchor.innerHTML = `<span class="trunk-ground"></span><span class="trunk-text">${escapeHtml(trunk)}${note}</span>`;
     row.appendChild(anchor);
 
     return row;

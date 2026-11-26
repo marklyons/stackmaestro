@@ -159,10 +159,18 @@
       return;
     }
 
+    // Every chain stacks on the same trunk, so they share one ground line instead of each
+    // drawing its own — bottom-aligning the row (see .board-row's align-items in CSS) means
+    // every column's last connector line lands at the same height, right where that one
+    // shared bar begins.
+    const row = document.createElement("div");
+    row.className = "board-row";
     const chains = toChains(forest.roots);
     for (const chain of chains) {
-      boardEl.appendChild(renderColumn([...chain].reverse(), forest.mainWorktreePath, forest.trunk));
+      row.appendChild(renderColumn([...chain].reverse(), forest.mainWorktreePath));
     }
+    boardEl.appendChild(row);
+    boardEl.appendChild(renderSharedTrunk(forest.trunk));
   }
 
   function renderError(message) {
@@ -173,7 +181,7 @@
     boardEl.appendChild(err);
   }
 
-  function renderColumn(nodesTipFirst, mainWorktreePath, trunk) {
+  function renderColumn(nodesTipFirst, mainWorktreePath) {
     const column = document.createElement("div");
     column.className = "stack-column";
 
@@ -210,27 +218,20 @@
       chain.appendChild(row);
     });
 
-    chain.appendChild(renderTrunkAnchor(trunk));
+    // No per-column trunk anchor anymore — every column ends in a plain connector line
+    // that runs down into the one shared trunk bar under the whole board.
+    const stub = makeEl("div", "gutter column-stub");
+    stub.appendChild(makeEl("div", "line"));
+    chain.appendChild(stub);
     column.appendChild(chain);
     return column;
   }
 
-  function renderTrunkAnchor(trunk) {
-    const row = document.createElement("div");
-    row.className = "row trunk-row";
-
-    const gutter = document.createElement("div");
-    gutter.className = "gutter";
-    gutter.appendChild(makeEl("div", "line line-up"));
-    gutter.appendChild(makeEl("div", "root-marker"));
-    row.appendChild(gutter);
-
-    const anchor = document.createElement("div");
-    anchor.className = "trunk-anchor";
-    anchor.innerHTML = `<span class="trunk-ground"></span><span class="trunk-text">${escapeHtml(trunk)} <em>(root)</em></span>`;
-    row.appendChild(anchor);
-
-    return row;
+  function renderSharedTrunk(trunk) {
+    const bar = document.createElement("div");
+    bar.className = "shared-trunk";
+    bar.innerHTML = `<span class="trunk-ground"></span><span class="trunk-text">${escapeHtml(trunk)} <em>(root — every stack above shares this trunk)</em></span>`;
+    return bar;
   }
 
   function dotClass(node) {
