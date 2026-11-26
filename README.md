@@ -5,6 +5,10 @@ no hand-maintained plan, no backend, no database. Coordination state
 (claims, agent identity, layer titles) lives in one file,
 `.git/stackmaestro/state.json`, shared across every worktree of a clone.
 
+[![Watch the StackMaestro demo](https://img.youtube.com/vi/KyPuRHNJK50/maxresdefault.jpg)](https://www.youtube.com/watch?v=KyPuRHNJK50)
+
+Read more: [StackMaestro: trying to make agent-written code understandable by humans](https://marklyons.github.io/personal-website/blog/stackmaestro.html).
+
 Three ways to use it: a Cursor/VS Code sidebar, an MCP server for any
 agent's chat, and a standalone desktop app.
 
