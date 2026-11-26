@@ -8,6 +8,16 @@ no hand-maintained plan, no backend, no database. Coordination state
 Three ways to use it: a Cursor/VS Code sidebar, an MCP server for any
 agent's chat, and a standalone desktop app.
 
+## Prerequisites
+
+- **[GitHub CLI (`gh`)](https://cli.github.com), installed *and* authenticated**
+  (`gh auth login`) — required. StackMaestro shells out to it for every
+  PR/stack operation (`gh pr create`, `gh pr list`, `gh api .../stacks`);
+  without it, publishing and PR status just fail.
+- Node 20+, [pnpm](https://pnpm.io) (`corepack enable` picks up the
+  version this repo pins automatically)
+- A regular git repo with a GitHub remote
+
 ## Build once
 
 ```bash
@@ -85,3 +95,7 @@ Quick iteration without a real app bundle: `pnpm --filter @stackmaestro/desktop 
 - UI for picking a sibling on a genuine fork (two children on one layer)
 - Agent registrations aren't pruned (claims expire; registrations don't)
 - Remote/team visibility — claims are local-machine-only by design
+
+## License
+
+[MIT](LICENSE)
