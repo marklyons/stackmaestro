@@ -6,6 +6,7 @@
   "scripts": {
     "build": "node esbuild.mjs",
     "start": "node esbuild.mjs && electron .",
+    "package:app": "node esbuild.mjs && ./scripts/make-app-bundle.sh",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
